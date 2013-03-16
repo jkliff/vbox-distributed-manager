@@ -4,6 +4,12 @@ import os.path
 import sys
 
 
+def call (cmd):
+    print cmd
+    os.system (cmd)
+
+
+
 def list_managed_hosts (conf, args):
     for h in conf.managed_hosts:
         print h
@@ -21,10 +27,24 @@ def list_vm_templates (conf, args):
             print 'template', f, is_dir_vm_template (f)
 
 
+def list_vms (conf, args):
+    host = args[0]
+
+    if host not in conf.managed_hosts:
+        print '[%s] is not a managed host' % host
+        return
+
+    cmd = "sh/gather_vbox_status.sh %s" % (host,)
+    result = call (cmd)
+    print result
+
+    call ('pwd')
+
 
 CMDS = {
-    'list-managed-hosts': list_managed_hosts,
-    'list-vm-templates' : list_vm_templates
+    'list-managed-hosts':   list_managed_hosts,
+    'list-vm-templates' :   list_vm_templates,
+    'list-vms':             list_vms
 }
 
 
