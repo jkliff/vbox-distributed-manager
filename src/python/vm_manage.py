@@ -14,18 +14,28 @@ def list_managed_hosts (conf, args):
     for h in conf.managed_hosts:
         print h
 
+def load_vm_templates (path):
+
+    def is_dir_vm_template (path):
+        return path.endswith ('.ova')
+
+    r = []
+
+    for d, ds, files in os.walk (path):
+        for f in files:
+            if is_dir_vm_template (f):
+                r.append (f [:-4])
+
+    return r
+
 def list_vm_templates (conf, args):
 
     if not os.path.exists (conf.template_path):
         print 'path [%s] does not exist' % conf.template_path
 
-    def is_dir_vm_template (path):
-        return path.endswith ('ova')
-
-    for d, ds, files in os.walk (conf.template_path):
-        for f in files:
-            print 'template', f, is_dir_vm_template (f)
-
+    vms = load_vm_templates (conf.template_path)
+    for v in vms:
+        print 'template', v
 
 def list_vms (conf, args):
     host = args[0]
@@ -38,13 +48,32 @@ def list_vms (conf, args):
     result = call (cmd)
     print result
 
-    call ('pwd')
+
+def deploy_vm (conf, args):
+    host = args [0]
+    template_vm = args [1]
+    target_name = args [2]
+
+    if host not in conf.managed_hosts:
+        print '[%s] is not a managed host' % host
+        return
+
+    if template_vm not in load_vm_templates (conf.template_path):
+        print 'template [%s] is not known' % template_vm
+
+        return -2
+
+
+    cmd = "sh/register_vbox_vm.sh \"%s\" \"%s\" \"%s\" \"%s\"" % (conf.template_path, host, template_vm, target_name)
+    result = call (cmd)
+    print result
 
 
 CMDS = {
     'list-managed-hosts':   list_managed_hosts,
     'list-vm-templates' :   list_vm_templates,
-    'list-vms':             list_vms
+    'list-vms':             list_vms,
+    'deploy-vm':            deploy_vm
 }
 
 
